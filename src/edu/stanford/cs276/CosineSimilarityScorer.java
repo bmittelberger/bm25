@@ -70,6 +70,28 @@ public class CosineSimilarityScorer extends AScorer {
     * @param q the Query
     */
 	public void normalizeTFs(Map<String,Map<String, Double>> tfs,Document d, Query q) {
+		
+		double totalTerms = 0.0;
+		Map<String, Double> docMap = tfs.get(d.url);
+		if (docMap == null ) {
+			System.out.print("no doc map: " + d.url);
+		} else {
+			System.out.println("ya");
+		}
+		for (String key : docMap.keySet()) {
+			totalTerms += docMap.get(key);
+		}
+		
+		for (String key : docMap.keySet()) {
+			docMap.put(key, docMap.get(key) / totalTerms);
+		}
+		
+		double docNorm = 0.0;
+		for (String key : docMap.keySet()) {
+			docNorm += docMap.get( key );
+		}
+		System.out.println( "total terms " + Double.toString(totalTerms)  );
+		System.out.println( "tf norm " + Double.toString(docNorm)  );
 		/*
 		 * TODO : Your code here
      *        Note that we should give uniform normalization to all 

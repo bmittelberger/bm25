@@ -138,21 +138,56 @@ public class LoadHandler {
     // Array of all the blocks (sub directories) in the PA1 corpus
 		File[] dirlist = rootdir.listFiles();
 
-		int totalDocCount = 0;
+		double totalDocCount = 0;
 
 		// Count number of documents in which each term appears
 		Map<String,Double> termDocCount = new HashMap<String, Double>();
 		
-		/*
-		 * TODO: Your code here.
-     *       For each file in each block, accumulate counts for:
-     *       1) Total number of documents
-     *       2) Total number of documents containing each term
-     *       Hint: consult PA1 for how to load each file in each block
-		 */
+		
+		int blockNum = 0;
+		for (File block : dirlist) {
+			
+			blockNum++;
+			File blockDir = new File(root, block.getName());
+			File[] filelist = blockDir.listFiles();
+
+
+
+			try {
+				/* For each file */
+				for (File file : filelist) {
+					++totalDocCount;
+					String fileName = block.getName() + "/" + file.getName();
+					Set<String> seenWords = new HashSet<String>();
+					
+					BufferedReader reader = new BufferedReader(new FileReader(file));
+					String line;
+					while ((line = reader.readLine()) != null) {
+	
+						String[] tokens = line.trim().split("\\s+");
+						for (String token : tokens) {
+							Double docCount = termDocCount.get(token);
+							if (docCount == null) {
+								termDocCount.put(token, 1.0);
+							} else if (!seenWords.contains(token)) {
+								termDocCount.put(token, ++docCount);
+								seenWords.add(token);
+							}
+						}
+					}
+					reader.close();
+				}
+			} catch(IOException e) {
+				System.err.print(e);
+				return null;
+			}
+
+
+		}
 		
 		// Compute inverse document frequencies using document frequencies
 		for (String term : termDocCount.keySet()) {
+			
 			/*
 			 * TODO : Your code here
        *        Remember that it's possible for a term to not appear 
@@ -160,6 +195,10 @@ public class LoadHandler {
        *        Thus to guard against such a case, we will apply 
        *        Laplace add-one smoothing.
 			 */
+			double termCount = termDocCount.get( term );
+			double termIdf = totalDocCount / ( termCount + 1 );
+			termIdf = Math.log( termIdf );
+			termDocCount.put( term , termIdf );			
 		}
 		
 		// Save to file
