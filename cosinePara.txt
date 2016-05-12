@@ -1,0 +1,6 @@
+urlweight 0.4
+titleweight 0.4
+bodyweight 0.5
+headerweight 0.4
+anchorweight 0.1
+smoothingBodyLength 50.0

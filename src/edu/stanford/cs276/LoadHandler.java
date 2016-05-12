@@ -188,18 +188,12 @@ public class LoadHandler {
 		// Compute inverse document frequencies using document frequencies
 		for (String term : termDocCount.keySet()) {
 			
-			/*
-			 * TODO : Your code here
-       *        Remember that it's possible for a term to not appear 
-       *        in the collection corpus.
-       *        Thus to guard against such a case, we will apply 
-       *        Laplace add-one smoothing.
-			 */
 			double termCount = termDocCount.get( term );
 			double termIdf = totalDocCount / ( termCount + 1 );
 			termIdf = Math.log( termIdf );
 			termDocCount.put( term , termIdf );			
 		}
+		termDocCount.put("$NICKI_MINAJ_NOT$" , Math.log(totalDocCount));
 		
 		// Save to file
 		try {

@@ -53,12 +53,7 @@ public class Rank {
 			Collections.sort(urlAndScores, new Comparator<Pair<String,Double>>() {
 				@Override
 				public int compare(Pair<String, Double> o1, Pair<String, Double> o2) {
-					/*
-					 * TODO : Your code here
-           *        Define a custom compare function to help sort urls
-           *        urls for a query based on scores.
-					 */
-					return -1;
+					return o1.getSecond() < o2.getSecond() ? 1 : -1;
 				}	
 			});
 			
@@ -86,6 +81,7 @@ public class Rank {
 			for (String res : queryRankings.get(query))
 				System.out.println("  url: " + res);
 		}	
+		System.out.println("Done.");
 	}
 	
   /**

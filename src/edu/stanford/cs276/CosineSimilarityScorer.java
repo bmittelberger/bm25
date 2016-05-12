@@ -27,12 +27,13 @@ public class CosineSimilarityScorer extends AScorer {
 	 *  TODO: You will want to tune the values for
    *        the weights for each field.
 	 */
-  	double urlweight = 0.1;
-  	double titleweight  = 0.1;
-  	double bodyweight = 0.1;
-  	double headerweight = 0.1;
+  	double urlweight = 0.4;
+  	double titleweight  = 0.4;
+  	double bodyweight = 0.5;
+  	double headerweight = 0.4;
   	double anchorweight = 0.1;
-	  double smoothingBodyLength = 1.0; 
+  	double smoothingBodyLength = 50.0; 
+	  
 
   /**
     * Construct a Cosine Similarity Scorer.
@@ -52,51 +53,60 @@ public class CosineSimilarityScorer extends AScorer {
     */
 	public double getNetScore(Map<String, Map<String, Double>> tfs, Query q, Map<String,Double> tfQuery, Document d) {
 		double score = 0.0;
+
+		Map<String, Double> finalDocVector = new HashMap<String, Double>();
+		for (String type : this.TFTYPES) {
+			Map<String, Double> typeVector = tfs.get(type);
+			for (String word : typeVector.keySet()) {
+				double value = getInterpolatedValue(type, typeVector.get(word));
+				if (! finalDocVector.containsKey(word) ) {
+					finalDocVector.put(word, value);
+				} else {
+					finalDocVector.put(word, finalDocVector.get(word) + value);
+				}
+			}
+		}
 		
-		/*
-		 * TODO : Your code here
-     *        See Equation 2 in the handout regarding the net score
-     *        between a query vector and the term score vectors
-     *        for a document.
-		 */
-		
+		for (String word : q.queryWords) {
+			if (! finalDocVector.containsKey(word) ) {
+				score += 0;
+			} else {
+				score += tfQuery.get(word) * finalDocVector.get(word);
+			}
+		}
 		return score;
 	}
 
+	
+	private double getInterpolatedValue(String type, Double value) {
+		if (value == null) {
+			return 0.0;
+		}
+		if (type.equals("url")) {
+			return this.urlweight * value;
+		} else if (type.equals("title")) {
+			return this.titleweight * value;
+		}else if (type.equals("header")) {
+			return this.headerweight * value;
+		}else if (type.equals("body")) {
+			return this.bodyweight * value;
+		}else { //anchor
+			return this.anchorweight * value;
+		}
+	}
   /**
 	  * Normalize the term frequencies. 
     * @param tfs the term frequencies
     * @param d the Document
     * @param q the Query
     */
-	public void normalizeTFs(Map<String,Map<String, Double>> tfs,Document d, Query q) {
-		
-		double totalTerms = 0.0;
-		Map<String, Double> docMap = tfs.get(d.url);
-		if (docMap == null ) {
-			System.out.print("no doc map: " + d.url);
-		} else {
-			System.out.println("ya");
+	public void normalizeTFs(Map<String,Map<String, Double>> tfs,Document d, Query q) {		
+		for (String typeName : this.TFTYPES) {
+			Map<String, Double> typeVector = tfs.get(typeName);
+			for (String word : typeVector.keySet()) {
+				typeVector.put(word, typeVector.get(word) / (this.smoothingBodyLength + d.body_length));
+			}
 		}
-		for (String key : docMap.keySet()) {
-			totalTerms += docMap.get(key);
-		}
-		
-		for (String key : docMap.keySet()) {
-			docMap.put(key, docMap.get(key) / totalTerms);
-		}
-		
-		double docNorm = 0.0;
-		for (String key : docMap.keySet()) {
-			docNorm += docMap.get( key );
-		}
-		System.out.println( "total terms " + Double.toString(totalTerms)  );
-		System.out.println( "tf norm " + Double.toString(docNorm)  );
-		/*
-		 * TODO : Your code here
-     *        Note that we should give uniform normalization to all 
-     *        fields as discussed in the assignment handout.
-		 */
 	}
 	
 	/**
