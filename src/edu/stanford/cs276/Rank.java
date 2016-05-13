@@ -71,17 +71,17 @@ public class Rank {
     * @param queryRankings the mapping of queries to rankings
     */
 	public static void printRankedResults(Map<Query,List<String>> queryRankings) {
-//		for (Query query : queryRankings.keySet()) {
-//			StringBuilder queryBuilder = new StringBuilder();
-//			for (String s : query.queryWords) {
-//				queryBuilder.append(s);
-//				queryBuilder.append(" ");
-//			}
-//			System.out.println("query: " + queryBuilder.toString());
-//			for (String res : queryRankings.get(query))
-//				System.out.println("  url: " + res);
-//		}	
-//		System.out.println("Done.");
+		for (Query query : queryRankings.keySet()) {
+			StringBuilder queryBuilder = new StringBuilder();
+			for (String s : query.queryWords) {
+				queryBuilder.append(s);
+				queryBuilder.append(" ");
+			}
+			System.out.println("query: " + queryBuilder.toString());
+			for (String res : queryRankings.get(query))
+				System.out.println("  url: " + res);
+		}	
+		System.out.println("Done.");
 	}
 	
   /**

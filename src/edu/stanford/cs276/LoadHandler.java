@@ -151,8 +151,6 @@ public class LoadHandler {
 			File blockDir = new File(root, block.getName());
 			File[] filelist = blockDir.listFiles();
 
-
-
 			try {
 				/* For each file */
 				for (File file : filelist) {

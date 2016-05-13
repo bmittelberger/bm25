@@ -20,12 +20,14 @@ import edu.stanford.cs276.util.WordPosition;
  */
 public class SmallestWindowScorer extends CosineSimilarityScorer {
 	
-  	double urlweight = 0.4;
+  	double urlweight = 0.2;
   	double titleweight  = 0.4;
-  	double bodyweight = 0.5;
-  	double headerweight = 0.4;
-  	double anchorweight = 0.1;
+  	double bodyweight = 0.1;
+  	double headerweight = 0.3;
+  	double anchorweight = 0.9;
   	double smoothingBodyLength = 50.0; 
+  	double boostFactor = 20.0;
+  	double gamma = 0.54;
 	
 	
 	public SmallestWindowScorer(Map<String, Double> idfs, Map<Query,Map<String, Document>> queryDict) {
@@ -42,13 +44,13 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 		
 		
 		//URL
-		System.out.println("url");
+//		System.out.println("url");
 		List<WordPosition> urlPositions = this.createPositions(d.url.split("[/_\\-.]"), q);
 		int checkSmallest = this.smallestWindow(urlPositions, q);
 		smallest = Integer.min(smallest, checkSmallest);		
 		
 		//TITLE
-		System.out.println("title");
+//		System.out.println("title");
 		List<WordPosition> titlePositions = this.createPositions(d.title.split(" "), q);
 		checkSmallest = this.smallestWindow(titlePositions, q);
 		smallest = Integer.min(smallest, checkSmallest);
@@ -56,7 +58,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 		//HEADERS
 	
 		if (d.headers != null) {
-			System.out.println("headers");
+//			System.out.println("headers");
 			for (String headers : d.headers) {
 				List<WordPosition> headerPositions = this.createPositions(headers.split(" "), q);
 				checkSmallest = this.smallestWindow(headerPositions, q);
@@ -66,7 +68,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 		
 		//BODY POSITIONS
 		if (d.body_hits != null) {
-			System.out.println("body");
+//			System.out.println("body");
 			List<WordPosition> bodyPositions = this.createBodyPositions(d.body_hits, q);
 			checkSmallest = this.smallestWindow(bodyPositions, q);
 			smallest = Integer.min(smallest, checkSmallest);
@@ -74,7 +76,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 		
 		//ANCHOR TEXTS
 		if (d.anchors != null) {
-			System.out.println("anchor");
+//			System.out.println("anchor");
 			for (String anchorText : d.anchors.keySet()) {
 				List<WordPosition> anchorPositions = this.createPositions(anchorText.split(" "), q);
 				checkSmallest = this.smallestWindow(anchorPositions, q);
@@ -88,34 +90,6 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 	}
 
 
-	
-
-	
-//	private Map<String, List<Integer>> createPositions(String field, Query q) {
-//		Map<String, List<Integer> > postitions = new HashMap<String, List<Integer> >();
-//		Set<String> qSet = new HashSet<String>(q.queryWords);
-//		
-//		
-//		String[] words = field.split(" ");
-//		
-//		if (words.length < q.queryWords.size() ) {
-//			return null;
-//		}
-//		
-//		for (int i = 0; i < words.length; i++) {
-//			if (qSet.contains(words[i])) {
-//				if (postitions.containsKey(words[i])) {
-//					postitions.get(words[i]).add(i);
-//				} else {
-//					List<Integer> newPositionList = new ArrayList<Integer>();
-//					newPositionList.add(i);
-//					postitions.put(words[i], newPositionList);
-//				}
-//			}
-//		}
-//		return postitions;
-//	}
-	
 	private List<WordPosition> createBodyPositions(Map<String, List<Integer> > bodyPositions, Query q) {
 		List<WordPosition> positions = new ArrayList<WordPosition>();
 		for (String word : bodyPositions.keySet()) {
@@ -139,7 +113,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 	}
 	
 	private List<WordPosition> createPositions(String[] fields, Query q) {
-		System.out.println("field: " + arrToString(fields));
+//		System.out.println("field: " + arrToString(fields));
 		List<WordPosition> positions = new ArrayList<WordPosition>();
 		String[] words = fields;
 		Set<String> qWords = new HashSet<String>(q.queryWords);
@@ -156,24 +130,51 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 	private int smallestWindow (List<WordPosition> positions, Query q) {
 		int smallest = Integer.MAX_VALUE;
 		Set<String> qSet = new HashSet<String>(q.queryWords);
-		Set<String> wordsFound = new HashSet<String>();
 		List<WordPosition> window = new LinkedList<WordPosition>();
+		Map<String, Integer> wordCounts = new HashMap<String, Integer>();
+		for (String qWord : q.queryWords) {
+			wordCounts.put(qWord, 0);
+		}
 		
 		
 		for (WordPosition p : positions) {
 			if (qSet.contains(p.word)) {
 				window.add(p);
-				wordsFound.add(p.word);
+				wordCounts.put(p.word, wordCounts.get(p.word) + 1);
 			}
 			if (window.size() < 1) {
 				continue;
 			}
-			if (window.get(0).word.equals(p.word) && wordsFound.equals(qSet)) {
-				window.remove(0);
+			
+			//create a set of words that we've collected in the window
+			Set<String> found = new HashSet<String>();
+			for (String word : wordCounts.keySet()) {
+				if (wordCounts.get(word) > 0){
+					found.add(word);
+				}
 			}
 			
-			if (wordsFound.equals(qSet)) {
-				int end = window.get(window.size() - 1).position;
+			if (found.equals(qSet)) {
+
+				//eliminate all the frontmost items to ensure that we get the smallest
+				//possible window here
+				while (true) {
+					if (window.size() < 1) {
+						break;
+					}
+					if (wordCounts.get(window.get(0).word) > 1) {
+						wordCounts.put(window.get(0).word, wordCounts.get(window.get(0).word) - 1);
+						window.remove(0);
+					} else {
+						break;
+					}
+				}
+				int end;
+				if (window.size() == 0) {
+					end = window.get(0).position;
+				} else {
+					end = window.get(window.size() - 1).position;
+				}
 				int begin = window.get(0).position;
 				int windowLen = end - begin + 1;
 				if (windowLen < smallest) {
@@ -182,8 +183,10 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 			}
 		}
 		
-		System.out.print("window: " + window.toString() + "\n");
-		System.out.println("distance: " + smallest + "\n");
+		
+//		System.out.println("positions: " + positions.toString());
+//		System.out.println("final window:" + window.toString());
+//		System.out.println("distance: " + smallest + "\n");
 		
 		return smallest;
 	}
@@ -194,14 +197,21 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 	 * @param q: query
 	 */	
 	private double getBoostScore (Document d, Query q) {
-		System.out.println("query: " + q.toString());
-		System.out.println(d.toString());
 		int smallestWindow = getSmallestWindow(d, q);
-		double boostScore = 0;
-		/*
-		 * @//TODO : Your code here, calculate the boost score.
-		 *
-		 */
+		
+		if (smallestWindow == Integer.MAX_VALUE) {
+			return 1;
+		}
+		
+		
+		double boostScore = 1.0;
+		double qSize = (double)(new HashSet<String>(q.queryWords).size());
+		double distance = (double)smallestWindow - qSize;
+		
+		double boostModifier = Math.pow(gamma, distance);
+		boostScore = 1 +  ( (boostFactor - 1) * boostModifier) ;
+		
+		
 		return boostScore;
 	}
 	
@@ -220,36 +230,3 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 
 }
 
-//public Double getWindow(List<String> fields, Query q) {
-//Double minWindow = Double.MAX_VALUE;
-//Set<String> qSet = new HashSet<String>(q.queryWords);
-//
-//for (String field: fields) {
-//	Set <String> needSet = new HashSet<String>(qSet);
-//	Set <String> foundSet = new HashSet<String>();
-//	Double minWindowLen = 0.0;
-//	String[] words = field.split(" ");
-//	if (words.length < q.queryWords.size()) {
-//		continue;
-//	}
-//	
-//	for (int start = 0, end = 0 ; end < words.length; end++) {
-//		if (!needSet.contains(words[end])){
-//			continue;
-//		} else if (qSet.contains(words[end])){
-//			foundSet.add(words[end]);
-//			needSet.remove(words[end]);
-//		}
-//		
-//		if (foundSet.equals(qSet) ) {
-//			
-//		}
-//		
-//	}
-//	
-//}
-//if (minWindow == Double.MAX_VALUE) {
-//	return -1.0;
-//}
-//return minWindow;
-//}
