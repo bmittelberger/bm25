@@ -17,22 +17,22 @@ public class BM25Scorer extends AScorer {
 	/*
 	*  TODO: You will want to tune these values
 	*/
-	double urlweight = 0.1;
-  	double titleweight  = 0.1;
+	double urlweight = 0.5;
+  	double titleweight  = .3;
   	double bodyweight = 0.3;
-  	double headerweight = 0.2;
-  	double anchorweight = 0.1;
+  	double headerweight = 0.7;
+  	double anchorweight = 0.5;
 	
 	// BM25-specific weights
 	double burl = 0.1;
-	double btitle = 0.3;
-	double bheader = 0.4;
-	double bbody = 0.4;
-	double banchor = 0.1;
+	double btitle = 0.1;
+	double bheader = 0.2;
+	double bbody = 0.7;
+	double banchor = 0.2;
 	
-	double k1 = 0.1;
-	double pageRankLambda = 0.1;
-	double pageRankLambdaPrime = 0.1; // for the log function: add log( pageRankLambdaPrime + page_rank_doc ) to each relevance computation
+	double k1 = 10;
+	double pageRankLambda = 2;
+	double pageRankLambdaPrime = .1; // for the log function: add log( pageRankLambdaPrime + page_rank_doc ) to each relevance computation
 	
 	// query -> url -> document
 	Map<Query,Map<String, Document>> queryDict; 
@@ -102,6 +102,7 @@ public class BM25Scorer extends AScorer {
 			avgLengths.put( tfType , average );
 		}
 		
+
 
 	}
 	
@@ -227,8 +228,14 @@ public class BM25Scorer extends AScorer {
 			score += ( numerator / denominator ) * idf ;
 		}
 		
-		// add the page rank final constant 
+		// add the page rank feature function value
+		// log function works better than division function
+		
+		//log function
 		score += pageRankLambda * Math.log( pageRankLambdaPrime  + d.page_rank );
+		
+		//division function
+		//score += ( (double) d.page_rank ) / ( pageRankLambdaPrime + (double) d.page_rank ); 
 		
 		
 		return score;

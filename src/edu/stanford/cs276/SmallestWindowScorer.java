@@ -1,5 +1,6 @@
 package edu.stanford.cs276;
 
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,13 +48,13 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 //		System.out.println("url");
 		List<WordPosition> urlPositions = this.createPositions(d.url.split("[/_\\-.]"), q);
 		int checkSmallest = this.smallestWindow(urlPositions, q);
-		smallest = Integer.min(smallest, checkSmallest);		
+		smallest = Math.min(smallest, checkSmallest);		
 		
 		//TITLE
 //		System.out.println("title");
 		List<WordPosition> titlePositions = this.createPositions(d.title.split(" "), q);
 		checkSmallest = this.smallestWindow(titlePositions, q);
-		smallest = Integer.min(smallest, checkSmallest);
+		smallest = Math.min(smallest, checkSmallest);
 		
 		//HEADERS
 	
@@ -62,7 +63,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 			for (String headers : d.headers) {
 				List<WordPosition> headerPositions = this.createPositions(headers.split(" "), q);
 				checkSmallest = this.smallestWindow(headerPositions, q);
-				smallest = Integer.min(smallest, checkSmallest);
+				smallest = Math.min(smallest, checkSmallest);
 			}
 		}
 		
@@ -71,7 +72,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 //			System.out.println("body");
 			List<WordPosition> bodyPositions = this.createBodyPositions(d.body_hits, q);
 			checkSmallest = this.smallestWindow(bodyPositions, q);
-			smallest = Integer.min(smallest, checkSmallest);
+			smallest = Math.min(smallest, checkSmallest);
 		}
 		
 		//ANCHOR TEXTS
@@ -80,7 +81,7 @@ public class SmallestWindowScorer extends CosineSimilarityScorer {
 			for (String anchorText : d.anchors.keySet()) {
 				List<WordPosition> anchorPositions = this.createPositions(anchorText.split(" "), q);
 				checkSmallest = this.smallestWindow(anchorPositions, q);
-				smallest = Integer.min(smallest, checkSmallest);
+				smallest = Math.min(smallest, checkSmallest);
 			}
 		}
 		

@@ -8,6 +8,7 @@ import java.util.Map;
 //import java.util.function.BiFunction;
 
 /**
+ * 
  * An abstract class for a scorer. 
  * Needs to be extended by each specific implementation of scorers.
  */
@@ -74,7 +75,6 @@ public abstract class AScorer {
    *        See the Document class in Document.java to see how
    *        the various fields are represented.
 	 */
-
 	
 	/**
 	 * Accumulate the various kinds of term frequencies 

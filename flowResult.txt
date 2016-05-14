@@ -1,3 +1,5 @@
+average body length
+39.590312815338045
 query: computer science 50th anniversary 
   url: http://www-cs.stanford.edu/cs50
   url: http://www-cs.stanford.edu/
@@ -1089,3 +1091,4 @@ query: campus tour info
   url: http://visit.stanford.edu/plan/stay.html
   url: https://transportation.stanford.edu/parking_info/ParkingInformation.shtml
   url: http://visit.stanford.edu/basics/visitor_center.html
+Done.
